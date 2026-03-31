@@ -2,7 +2,7 @@ import { Handle, Position } from 'reactflow';
 
 export default function CustomNode({ data, selected }) {
   const numPoints = 8;
-  const radius = 45; // exactement sur le bord du cercle (diamètre 90)
+  const radius = 45;
 
   const handles = [];
   for (let i = 0; i < numPoints; i++) {
@@ -67,9 +67,12 @@ export default function CustomNode({ data, selected }) {
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
-        border: selected ? '3px solid #1d4ed8' : '2px solid #3b82f6',
-        backgroundColor: selected ? '#93c5fd' : '#e2e8f0',
+        border: selected ? '3px solid #f97316' : '2px solid #3b82f6',
+        backgroundColor: selected ? '#fed7aa' : '#f3f4f6',
         userSelect: 'none',
+        fontWeight: 'bold',
+        fontSize: '1rem',
+        color: '#1f2937',
       }}
     >
       {handles}

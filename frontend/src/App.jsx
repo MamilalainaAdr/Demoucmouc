@@ -34,36 +34,6 @@ const defaultEdgeOptions = {
   labelBgBorderRadius: 4,
 };
 
-const getInitialNodes = () => [
-  {
-    id: uuidv4(),
-    type: 'customNode',
-    position: { x: 100, y: 200 },
-    data: { label: 'x1' },
-  },
-  {
-    id: uuidv4(),
-    type: 'customNode',
-    position: { x: 500, y: 200 },
-    data: { label: 'x2' },
-  },
-];
-
-const getInitialEdges = (nodes) => {
-  if (nodes.length < 2) return [];
-  return [
-    {
-      id: uuidv4(),
-      source: nodes[0].id,
-      target: nodes[1].id,
-      sourceHandle: 'source-0',
-      targetHandle: 'target-5',
-      label: '10',
-      data: { label: '10' },
-    },
-  ];
-};
-
 // Génère le prochain label selon le type et les labels existants
 function getNextLabel(existingLabels, type) {
   if (type === 'alpha') {
@@ -72,27 +42,82 @@ function getNextLabel(existingLabels, type) {
       const candidate = letters[i];
       if (!existingLabels.includes(candidate)) return candidate;
     }
-    // Si toutes les lettres sont utilisées, on retourne null (bloquer l'ajout)
     return null;
   } else {
-    // type 'x' ou 'y'
     let num = 1;
     while (existingLabels.includes(`${type}${num}`)) num++;
     return `${type}${num}`;
   }
 }
 
-function App() {
-  const [nodes, setNodes, onNodesChange] = useNodesState(getInitialNodes());
-  const [edges, setEdges, onEdgesChange] = useEdgesState(getInitialEdges(nodes));
-  const [mermaidCode, setMermaidCode] = useState('');
-  const [variableType, setVariableType] = useState('x'); // 'x', 'y', 'alpha'
+// Crée deux nœuds initiaux selon le type
+function getInitialNodesForType(type) {
+  const labels = [];
+  const first = getNextLabel(labels, type);
+  if (first) labels.push(first);
+  const second = getNextLabel(labels, type);
+  return [
+    {
+      id: uuidv4(),
+      type: 'customNode',
+      position: { x: 100, y: 200 },
+      data: { label: first || 'x1' },
+    },
+    {
+      id: uuidv4(),
+      type: 'customNode',
+      position: { x: 500, y: 200 },
+      data: { label: second || 'x2' },
+    },
+  ];
+}
 
+function App() {
+  const [nodes, setNodes, onNodesChange] = useNodesState([]);
+  const [edges, setEdges, onEdgesChange] = useEdgesState([]);
+  const [mermaidCode, setMermaidCode] = useState('');
+  const [variableType, setVariableType] = useState('x');
+
+  // Réinitialisation complète avec le nouveau type
+  const resetGraphWithType = useCallback((type) => {
+    const newNodes = getInitialNodesForType(type);
+    setNodes(newNodes);
+    // Créer une arête par défaut entre les deux premiers nœuds
+    if (newNodes.length >= 2) {
+      const newEdges = [
+        {
+          id: uuidv4(),
+          source: newNodes[0].id,
+          target: newNodes[1].id,
+          sourceHandle: 'source-0',
+          targetHandle: 'target-5',
+          label: '10',
+          data: { label: '10' },
+        },
+      ];
+      setEdges(newEdges);
+    } else {
+      setEdges([]);
+    }
+  }, [setNodes, setEdges]);
+
+  // Initialisation au premier chargement
+  useEffect(() => {
+    resetGraphWithType('x');
+  }, []);
+
+  // Mise à jour du code Mermaid
   useEffect(() => {
     setMermaidCode(generateMermaidCode(nodes, edges));
   }, [nodes, edges]);
 
-  // Supprimer l'élément sélectionné (nœud ou arête)
+  // Changement de type : on recharge le graphe
+  const handleVariableTypeChange = useCallback((newType) => {
+    setVariableType(newType);
+    resetGraphWithType(newType);
+  }, [resetGraphWithType]);
+
+  // Supprimer l'élément sélectionné
   const handleDeleteSelected = useCallback(() => {
     const selectedNodes = nodes.filter(node => node.selected);
     if (selectedNodes.length) {
@@ -108,11 +133,12 @@ function App() {
     }
   }, [nodes, edges, setNodes, setEdges]);
 
-  const handleAddNode = () => {
+  // Ajout d'un nœud
+  const handleAddNode = useCallback(() => {
     const existingLabels = nodes.map(n => n.data.label);
     const newLabel = getNextLabel(existingLabels, variableType);
     if (!newLabel) {
-      alert('Plus de lettres disponibles (max 26)');
+      alert('Plus de noms disponibles');
       return;
     }
     const newNode = {
@@ -122,15 +148,24 @@ function App() {
       data: { label: newLabel },
     };
     setNodes(nds => [...nds, newNode]);
-  };
+  }, [nodes, variableType, setNodes]);
+
+  // Vérifier si une arête existe déjà entre deux nœuds (non orienté)
+  const isEdgeExists = useCallback((sourceId, targetId) => {
+    return edges.some(edge => 
+      (edge.source === sourceId && edge.target === targetId) ||
+      (edge.source === targetId && edge.target === sourceId)
+    );
+  }, [edges]);
 
   const isValidConnection = useCallback((connection) => {
     return (
       connection.sourceHandle?.startsWith('source') &&
       connection.targetHandle?.startsWith('target') &&
-      connection.source !== connection.target
+      connection.source !== connection.target &&
+      !isEdgeExists(connection.source, connection.target)
     );
-  }, []);
+  }, [isEdgeExists]);
 
   const onConnect = useCallback((params) => {
     if (!isValidConnection(params)) return;
@@ -151,7 +186,7 @@ function App() {
   const onEdgeDoubleClick = useCallback((event, edge) => {
     event.stopPropagation();
     const newValue = prompt('Modifier la valeur de la flèche :', edge.data?.label || '');
-    if (newValue !== null) {
+    if (newValue !== null && newValue.trim() !== '') {
       setEdges(eds =>
         eds.map(e =>
           e.id === edge.id
@@ -163,9 +198,7 @@ function App() {
   }, [setEdges]);
 
   const onKeyDown = useCallback((event) => {
-    if (event.key === 'Delete') {
-      handleDeleteSelected();
-    }
+    if (event.key === 'Delete') handleDeleteSelected();
   }, [handleDeleteSelected]);
 
   const handleClear = () => {
@@ -182,7 +215,7 @@ function App() {
         onDeleteSelected={handleDeleteSelected}
         onClear={handleClear}
         variableType={variableType}
-        onVariableTypeChange={setVariableType}
+        onVariableTypeChange={handleVariableTypeChange}
       />
       <div className="flex flex-1 overflow-hidden">
         <div className="flex-1 relative">
@@ -192,6 +225,7 @@ function App() {
             onNodesChange={onNodesChange}
             onEdgesChange={onEdgesChange}
             onConnect={onConnect}
+            onEdgeDoubleClick={onEdgeDoubleClick}
             isValidConnection={isValidConnection}
             connectionMode="loose"
             nodeTypes={nodeTypes}

@@ -1,13 +1,29 @@
 @import 'tailwindcss';
 @import 'tailwindcss/utilities';
 
+body {
+  font-family: system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+}
+
 .react-flow__handle {
   background-color: #3b82f6;
   width: 8px;
   height: 8px;
 }
 
+/* Arête sélectionnée : orange */
 .react-flow__edge.selected .react-flow__edge-path {
-  stroke: #ef4444 !important;
+  stroke: #f97316 !important;
   stroke-width: 3px;
+}
+
+/* Style des contrôles React Flow (zoom, etc.) */
+.react-flow__controls button {
+  background-color: white;
+  border: 1px solid #e5e7eb;
+  color: #374151;
+}
+
+.react-flow__controls button:hover {
+  background-color: #f9fafb;
 }
