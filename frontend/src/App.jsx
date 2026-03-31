@@ -12,6 +12,7 @@ import 'reactflow/dist/style.css';
 import CustomNode from './components/CustomNode';
 import Toolbar from './components/Toolbar';
 import CodePanel from './components/CodePanel';
+import VectorPanel from './components/VectorPanel';
 import { generateMermaidCode } from './utils/mermaidGenerator';
 import { v4 as uuidv4 } from 'uuid';
 
@@ -240,8 +241,9 @@ function App() {
             <Controls />
           </ReactFlow>
         </div>
-        <div className="w-96 border-l border-gray-200 bg-white">
+        <div className="w-1/3 border-l border-gray-200 bg-white flex flex-col">
           <CodePanel code={mermaidCode} />
+          <VectorPanel nodes={nodes} edges={edges} />
         </div>
       </div>
     </div>
