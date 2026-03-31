@@ -1,77 +1,80 @@
 import { Handle, Position } from 'reactflow';
 
-export default function CustomNode({ data }) {
+export default function CustomNode({ data, selected }) {
+  const numPoints = 8; // 8 points suffisent pour une bonne connectivité
+  const radius = 40;   // rayon commun pour source et target
+
+  const handles = [];
+  for (let i = 0; i < numPoints; i++) {
+    const angle = (i * 360) / numPoints;
+    const radian = (angle * Math.PI) / 180;
+    const x = 50 + radius * Math.cos(radian);
+    const y = 50 + radius * Math.sin(radian);
+
+    let position;
+    if (angle >= 315 || angle < 45) position = Position.Right;
+    else if (angle >= 45 && angle < 135) position = Position.Bottom;
+    else if (angle >= 135 && angle < 225) position = Position.Left;
+    else position = Position.Top;
+
+    // Handle source (départ de flèche)
+    handles.push(
+      <Handle
+        key={`source-${i}`}
+        type="source"
+        position={position}
+        id={`source-${i}`}
+        style={{
+          left: `${x}%`,
+          top: `${y}%`,
+          width: 12,
+          height: 12,
+          background: '#3b82f6',
+          border: '2px solid white',
+          transform: 'translate(-50%, -50%)',
+          zIndex: 200,
+        }}
+        isConnectable={true}
+      />
+    );
+    // Handle target (arrivée de flèche) – exactement au même endroit
+    handles.push(
+      <Handle
+        key={`target-${i}`}
+        type="target"
+        position={position}
+        id={`target-${i}`}
+        style={{
+          left: `${x}%`,
+          top: `${y}%`,
+          width: 12,
+          height: 12,
+          background: '#3b82f6', // même couleur que source
+          border: '2px solid white',
+          transform: 'translate(-50%, -50%)',
+          zIndex: 100,
+        }}
+        isConnectable={true}
+      />
+    );
+  }
+
   return (
     <div
       style={{
-        width: 80,
-        height: 80,
+        width: 90,
+        height: 90,
         borderRadius: '50%',
-        backgroundColor: '#e2e8f0',
-        border: '2px solid #3b82f6',
+        position: 'relative',
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
-        textAlign: 'center',
-        fontWeight: 'bold',
-        fontSize: '14px',
-        wordBreak: 'break-word',
-        padding: '8px',
-        position: 'relative',
+        border: selected ? '3px solid #1d4ed8' : '2px solid #3b82f6',
+        backgroundColor: selected ? '#93c5fd' : '#e2e8f0',
+        userSelect: 'none',
       }}
     >
-      {/* 4 Handles à gauche (entrée) */}
-      <Handle
-        type="target"
-        position={Position.Left}
-        id="left-1"
-        style={{ top: '20%', background: '#3b82f6' }}
-      />
-      <Handle
-        type="target"
-        position={Position.Left}
-        id="left-2"
-        style={{ top: '40%', background: '#3b82f6' }}
-      />
-      <Handle
-        type="target"
-        position={Position.Left}
-        id="left-3"
-        style={{ top: '60%', background: '#3b82f6' }}
-      />
-      <Handle
-        type="target"
-        position={Position.Left}
-        id="left-4"
-        style={{ top: '80%', background: '#3b82f6' }}
-      />
-
-      {/* 4 Handles à droite (sortie) */}
-      <Handle
-        type="source"
-        position={Position.Right}
-        id="right-1"
-        style={{ top: '20%', background: '#3b82f6' }}
-      />
-      <Handle
-        type="source"
-        position={Position.Right}
-        id="right-2"
-        style={{ top: '40%', background: '#3b82f6' }}
-      />
-      <Handle
-        type="source"
-        position={Position.Right}
-        id="right-3"
-        style={{ top: '60%', background: '#3b82f6' }}
-      />
-      <Handle
-        type="source"
-        position={Position.Right}
-        id="right-4"
-        style={{ top: '80%', background: '#3b82f6' }}
-      />
-
+      {handles}
       {data.label}
     </div>
   );

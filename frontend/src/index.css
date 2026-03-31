@@ -1,7 +1,6 @@
 @import 'tailwindcss';
 @import 'tailwindcss/utilities';
 
-/* Styles additionnels pour React Flow */
 .react-flow__handle {
   background-color: #3b82f6;
   width: 8px;
