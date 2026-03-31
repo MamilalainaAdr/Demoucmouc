@@ -60,8 +60,8 @@ export default function CustomNode({ data, selected }) {
   return (
     <div
       style={{
-        width: 90,
-        height: 90,
+        width: 50,
+        height: 50,
         borderRadius: '50%',
         position: 'relative',
         display: 'flex',
