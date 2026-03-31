@@ -71,7 +71,7 @@ export default function CustomNode({ data, selected }) {
         backgroundColor: selected ? '#fed7aa' : '#f3f4f6',
         userSelect: 'none',
         fontWeight: 'bold',
-        fontSize: '1rem',
+        fontSize: '0.7rem',
         color: '#1f2937',
       }}
     >

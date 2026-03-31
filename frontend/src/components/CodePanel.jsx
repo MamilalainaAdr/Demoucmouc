@@ -6,8 +6,8 @@ export default function CodePanel({ code }) {
 
   return (
     <div className="h-full flex flex-col">
-      <div className="p-4 bg-gray-100 border-b border-gray-200">
-        <h2 className="text-xl font-semibold">Code Mermaid généré</h2>
+      <div className="p-2 bg-gray-100 border-b border-gray-200">
+        <h2 className="ml-2 font-semibold">Code Mermaid</h2>
       </div>
       <div className="flex-1 p-4">
         <textarea
