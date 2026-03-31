@@ -1,8 +1,8 @@
 import { Handle, Position } from 'reactflow';
 
 export default function CustomNode({ data, selected }) {
-  const numPoints = 8; // 8 points suffisent pour une bonne connectivité
-  const radius = 40;   // rayon commun pour source et target
+  const numPoints = 8;
+  const radius = 45; // exactement sur le bord du cercle (diamètre 90)
 
   const handles = [];
   for (let i = 0; i < numPoints; i++) {
@@ -17,7 +17,6 @@ export default function CustomNode({ data, selected }) {
     else if (angle >= 135 && angle < 225) position = Position.Left;
     else position = Position.Top;
 
-    // Handle source (départ de flèche)
     handles.push(
       <Handle
         key={`source-${i}`}
@@ -37,7 +36,6 @@ export default function CustomNode({ data, selected }) {
         isConnectable={true}
       />
     );
-    // Handle target (arrivée de flèche) – exactement au même endroit
     handles.push(
       <Handle
         key={`target-${i}`}
@@ -49,7 +47,7 @@ export default function CustomNode({ data, selected }) {
           top: `${y}%`,
           width: 12,
           height: 12,
-          background: '#3b82f6', // même couleur que source
+          background: '#3b82f6',
           border: '2px solid white',
           transform: 'translate(-50%, -50%)',
           zIndex: 100,

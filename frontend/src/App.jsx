@@ -64,24 +64,62 @@ const getInitialEdges = (nodes) => {
   ];
 };
 
+// Génère le prochain label selon le type et les labels existants
+function getNextLabel(existingLabels, type) {
+  if (type === 'alpha') {
+    const letters = 'abcdefghijklmnopqrstuvwxyz';
+    for (let i = 0; i < letters.length; i++) {
+      const candidate = letters[i];
+      if (!existingLabels.includes(candidate)) return candidate;
+    }
+    // Si toutes les lettres sont utilisées, on retourne null (bloquer l'ajout)
+    return null;
+  } else {
+    // type 'x' ou 'y'
+    let num = 1;
+    while (existingLabels.includes(`${type}${num}`)) num++;
+    return `${type}${num}`;
+  }
+}
+
 function App() {
   const [nodes, setNodes, onNodesChange] = useNodesState(getInitialNodes());
   const [edges, setEdges, onEdgesChange] = useEdgesState(getInitialEdges(nodes));
   const [mermaidCode, setMermaidCode] = useState('');
+  const [variableType, setVariableType] = useState('x'); // 'x', 'y', 'alpha'
 
   useEffect(() => {
     setMermaidCode(generateMermaidCode(nodes, edges));
   }, [nodes, edges]);
 
+  // Supprimer l'élément sélectionné (nœud ou arête)
+  const handleDeleteSelected = useCallback(() => {
+    const selectedNodes = nodes.filter(node => node.selected);
+    if (selectedNodes.length) {
+      const idsToDelete = selectedNodes.map(n => n.id);
+      setNodes(nds => nds.filter(n => !idsToDelete.includes(n.id)));
+      setEdges(eds => eds.filter(e => !idsToDelete.includes(e.source) && !idsToDelete.includes(e.target)));
+    } else {
+      const selectedEdges = edges.filter(edge => edge.selected);
+      if (selectedEdges.length) {
+        const idsToDelete = selectedEdges.map(e => e.id);
+        setEdges(eds => eds.filter(e => !idsToDelete.includes(e.id)));
+      }
+    }
+  }, [nodes, edges, setNodes, setEdges]);
+
   const handleAddNode = () => {
     const existingLabels = nodes.map(n => n.data.label);
-    let newNumber = 1;
-    while (existingLabels.includes(`x${newNumber}`)) newNumber++;
+    const newLabel = getNextLabel(existingLabels, variableType);
+    if (!newLabel) {
+      alert('Plus de lettres disponibles (max 26)');
+      return;
+    }
     const newNode = {
       id: uuidv4(),
       type: 'customNode',
       position: { x: 300 + Math.random() * 200, y: 100 + Math.random() * 300 },
-      data: { label: `x${newNumber}` },
+      data: { label: newLabel },
     };
     setNodes(nds => [...nds, newNode]);
   };
@@ -126,20 +164,9 @@ function App() {
 
   const onKeyDown = useCallback((event) => {
     if (event.key === 'Delete') {
-      const selectedNodes = nodes.filter(node => node.selected);
-      if (selectedNodes.length) {
-        const idsToDelete = selectedNodes.map(n => n.id);
-        setNodes(nds => nds.filter(n => !idsToDelete.includes(n.id)));
-        setEdges(eds => eds.filter(e => !idsToDelete.includes(e.source) && !idsToDelete.includes(e.target)));
-      } else {
-        const selectedEdges = edges.filter(edge => edge.selected);
-        if (selectedEdges.length) {
-          const idsToDelete = selectedEdges.map(e => e.id);
-          setEdges(eds => eds.filter(e => !idsToDelete.includes(e.id)));
-        }
-      }
+      handleDeleteSelected();
     }
-  }, [nodes, edges, setNodes, setEdges]);
+  }, [handleDeleteSelected]);
 
   const handleClear = () => {
     if (confirm('Supprimer tous les nœuds et arêtes ?')) {
@@ -148,13 +175,15 @@ function App() {
     }
   };
 
-  const handleGenerate = () => {
-    alert('Code généré et affiché à droite');
-  };
-
   return (
     <div className="h-screen flex flex-col">
-      <Toolbar onAddNode={handleAddNode} onGenerate={handleGenerate} onClear={handleClear} />
+      <Toolbar
+        onAddNode={handleAddNode}
+        onDeleteSelected={handleDeleteSelected}
+        onClear={handleClear}
+        variableType={variableType}
+        onVariableTypeChange={setVariableType}
+      />
       <div className="flex flex-1 overflow-hidden">
         <div className="flex-1 relative">
           <ReactFlow
@@ -171,6 +200,7 @@ function App() {
             deleteKeyCode="Delete"
             selectionKeyCode="Shift"
             connectOnClick={false}
+            onKeyDown={onKeyDown}
           >
             <Background />
             <Controls />

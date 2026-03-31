@@ -6,3 +6,8 @@
   width: 8px;
   height: 8px;
 }
+
+.react-flow__edge.selected .react-flow__edge-path {
+  stroke: #ef4444 !important;
+  stroke-width: 3px;
+}
